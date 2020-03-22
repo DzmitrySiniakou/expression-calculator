@@ -3,70 +3,104 @@ function eval() {
     return;
 }
 function expressionCalculator(expr) {
-    let ArrayFromExpr = expr.split(' ').join('').split('');
-    let normalArr = []; // array normal number,brackets and math operation
-
-    // array normal number,brackets and math operation
-    function getNormalArr(){
-        
-        for (let i = 0; i < ArrayFromExpr.length; i++){
-            if (isNaN(Number(ArrayFromExpr[i-1])) && !isNaN(Number(ArrayFromExpr[i])) && isNaN(Number(ArrayFromExpr[i+1]))){
-                normalArr.push(ArrayFromExpr[i])};
-            if (!isNaN(Number(ArrayFromExpr[i])) && !isNaN(Number(ArrayFromExpr[i+1]))){
-                normalArr.push(`${ArrayFromExpr[i]}${ArrayFromExpr[i+1]}`);
-            };
-            if ( ArrayFromExpr[i] === '+') normalArr.push('+');
-            if ( ArrayFromExpr[i] === '-') normalArr.push('-');
-            if ( ArrayFromExpr[i] === '*') normalArr.push('*');
-            if ( ArrayFromExpr[i] === '/') normalArr.push('/');
-            if ( ArrayFromExpr[i] === '(') normalArr.push('(');
-            if ( ArrayFromExpr[i] === ')') normalArr.push(')');
-        }
-        return normalArr;
-    }   
-
-    //count in brackets
-    //not done
-    function countBrackets () {
-        let countOutFromBrackets = [];
-        for (let i = 0; i < normalArr.length; i++){
-            if (normalArr[i] === '*'){
-                +normalArr[i-1] * +normalArr[i+1]};
-            if (normalArr[i] === '/'){
-                +normalArr[i-1] / +normalArr[i+1]};
-            return countOutFromBrackets;
-        }      
-    }
-    
-    // function Calculator() {
-    //     this.methods = {
-    //         "*" : (a, b) => a * b,
-    //         "/" : (a, b) => a / b
-    //     };
-
-    //     this.calculate = function(str) {}
-    // }
-
-
-
-    // cuts out what is in brackets
-    function defBrackets () {
-        for (let i = 0; i < normalArr.length-1; i++){
-            if (normalArr[i] == ')'){
-                for ( j=i ; j > 0 ; j--){
-                    if (normalArr[j] == '('){
-                        normalArr.slice(j + 1, i);                                        
-                    }
-                }
-            }   
-        }
-    }
-    
-    console.log(getNormalArr());
-
+    let exprArr = expr.split(' ').join('').split('');
+    if (DevideByZero(exprArr)) throw "TypeError: Division by zero.";
+    if (!BracketsPaired(exprArr)) throw "ExpressionError: Brackets must be paired";
+    exprArr = createArrWithNumbers(exprArr);
+    if (BracketsExist(exprArr)) do {
+      let lind = indexOfLeftBracket(exprArr);
+      let rind = indexOfRightBracket(exprArr);
+      let bracketsEqual = calcWithoutBrackets(exprArr.slice(lind + 1, rind));
+      exprArr.splice(lind, rind - lind + 1, bracketsEqual);
+    } while (BracketsExist(exprArr));
+  
+    return Math.round(calcWithoutBrackets(exprArr)*10000)/10000;
 }
+
 
 module.exports = {
     expressionCalculator
 }
 
+function BracketsExist(arr) {
+    if (arr.includes('(')) return true;
+    return false;
+}
+
+function DevideByZero(arr){
+    a = false;
+    arr.forEach((element, index) =>{
+        if (element == '/' && arr[index + 1] == '0') a = true;
+    });
+    return a;
+}
+
+function BracketsPaired(arr){
+    let outArr = arr.join('').split('');
+    let left = 0;
+    let right = 0;
+    outArr.forEach(elem => {
+      if (elem === '(') left++;
+      if (elem === ')') right++;
+    });
+    if (left === right) {
+      return true;
+    } else {
+      return false;
+    }
+}
+
+function indexOfRightBracket(expr) {
+    return expr.indexOf(')');
+}
+
+function indexOfLeftBracket(expr) {
+    return expr.lastIndexOf('(', indexOfRightBracket(expr));
+}
+  
+function createArrWithNumbers(expr) {
+    outputArr = [];
+    expr.forEach((elem, ind, arr) => {
+      if (isNaN(Number(elem))) {
+        outputArr.push(' ');
+        outputArr.push(elem);
+        outputArr.push(' ');
+      } else {
+        outputArr.push(elem);
+      };
+    });
+    outputArr = outputArr.join('').split(' ');
+    outputArr.forEach((elem, ind, arr) => {
+      if (elem === '') {
+        arr = arr.splice(ind, 1);
+      } else {
+        if (!isNaN(Number(elem))) arr[ind] = Number(elem);
+      }
+    });
+    return outputArr;
+}
+  
+function calcWithoutBrackets(arr) {
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i] === '*') {
+        arr.splice(i - 1, 3, arr[i - 1] * arr[i + 1]);
+        i--;
+      };
+      if (arr[i] === '/') {
+        arr.splice(i - 1, 3, arr[i - 1] / arr[i + 1]);
+        i--
+      };
+    };
+  
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i] === '+') {
+        arr.splice(i - 1, 3, arr[i - 1] + arr[i + 1]);
+        i--;
+      };
+      if (arr[i] === '-') {
+        arr.splice(i - 1, 3, arr[i - 1] - arr[i + 1]);
+        i--;
+      };
+    };
+return arr[0];
+}
